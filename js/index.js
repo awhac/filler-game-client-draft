@@ -51,7 +51,7 @@ function draw() {
     ctx.fillStyle = p2Color;
     ctx.fillText("P2", 825, 325);
 
-    game.field.draw(ctx, 50, 50, 50, 50);
+    game.field.draw(ctx, 50, 50, 50, 50); // TODO: Add constants instead hardcoding cordinates
     palette.draw(ctx, 125, 400, game.players[(game.currentPlayerIndex + 1) % 2].colorId);
 }
 
@@ -59,15 +59,16 @@ init();
 draw();
 
 // This is doable without a game loop
+// Handle keyboard events here
 document.onkeydown = function(e) {
     var currentColorId = null;
 
     switch (e.keyCode) {
-        case 37:
-            palette.left();
+        case 37:        // TODO: Add quick access to other player color
+            palette.left(game.players[(game.currentPlayerIndex + 1) % 2].colorId);
             break;
         case 39:
-            palette.right();
+            palette.right(game.players[(game.currentPlayerIndex + 1) % 2].colorId);
             break;
         case 13:
             currentColorId = palette.getCurrentColorIndex();
@@ -81,4 +82,24 @@ document.onkeydown = function(e) {
     // clean canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     draw();
+}
+
+canvas.addEventListener('click', canvasTouchListener, false);
+
+// Handle mouse touch events here
+var canvasLeft = canvas.offsetLeft + canvas.clientLeft,
+    canvasTop = canvas.offsetTop + canvas.clientTop;
+function canvasTouchListener(event) {
+    var x = event.pageX - canvasLeft,
+        y = event.pageY - canvasTop;
+
+    // If palette color was picked
+    var pickedColor = palette.checkCollision(125, 400, game.players[(game.currentPlayerIndex + 1) % 2].colorId, x, y);
+    if (pickedColor != -1) {
+        palette.currentColorIndex = pickedColor;
+
+        game.handleMove(pickedColor);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        draw();
+    }
 }
