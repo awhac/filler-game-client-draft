@@ -1,7 +1,9 @@
 import { Game } from './modules/game.js'
 import { Palette } from './modules/palette.js';
+import { colors } from './modules/colors.js';
 
-// TODO: We can just store colors as ints and return strings when we JSON-ify them
+// TODO: Add proper messaging (added cell count, player percentage e.t.c)
+// TODO: After page resize mouse events won't work cerrectly
 
 var canvas = document.getElementById("canvas");
 var body = document.getElementById("body");
@@ -9,6 +11,7 @@ var messageBox = document.getElementById("game-message");
 var ctx;
 var game = new Game("game-1", 15, 10);
 var palette = new Palette(50, 50, 50);
+
 
 function init() {
     if (canvas) {
@@ -23,10 +26,11 @@ function init() {
 }
 
 function draw() {
-    // TODO: not handled width resize - cooridnates are just hardcoded
+    // TODO: cooridnates are just hardcoded - add resize support
     
-    let p1Color = "#FF0000";
-    let p2Color = "#0000FF";
+    // handle white color (id == 2)
+    let p1Color = game.players[0].colorId == 2 ? "#000000" : colors[game.players[0].colorId];
+    let p2Color = game.players[1].colorId == 2 ? "#000000" : colors[game.players[1].colorId];
 
     // player plates style
     ctx.font = "bold 48px serif";
@@ -34,17 +38,16 @@ function draw() {
     
     if (body) {
         if (game.currentPlayerId == 1) {
-            body.style.backgroundImage = "linear-gradient(135deg, "+ "#FF9999, 5%" +", "+ "#FFFFFF" +")";
+            body.style.backgroundImage = "linear-gradient(90deg, "  + p1Color + ", 5%" +", "+ "#FFFFFF" +")";
             p2Color = p2Color + "22"; // add alpha
         } else if (game.currentPlayerId == 2) {
-            body.style.backgroundImage = "linear-gradient(-90deg, "+ "#6EE1F5, 5%" +", "+ "#FFFFFF" +")";
+            body.style.backgroundImage = "linear-gradient(-90deg, " + p2Color + ", 5%" +", "+ "#FFFFFF" +")";
             p1Color = p1Color + "22"; // add alpha;
         } else {
-            body.style.backgroundImage = "linear-gradient(90deg, "+ "0F0F0F" +", "+ "0F0F0F" +")";
+            body.style.backgroundImage = "linear-gradient(90deg, "+ "#0F0F0F" +", "+ "#0F0F0F" +")";
         }
     }
     
-    // draw player plates
     ctx.fillStyle = p1Color;
     ctx.fillText("P1", 0, 10);
 
@@ -58,12 +61,18 @@ function draw() {
 init();
 draw();
 
+
+document.onkeydown = keyboardListener;
+canvas.addEventListener('click', canvasTouchListener, false);
+
+
 // This is doable without a game loop
+
 // Handle keyboard events here
-document.onkeydown = function(e) {
+function keyboardListener(event) {
     var currentColorId = null;
 
-    switch (e.keyCode) {
+    switch (event.keyCode) {
         case 37:        // TODO: Add quick access to other player color
             palette.left(game.players[(game.currentPlayerIndex + 1) % 2].colorId);
             break;
@@ -84,7 +93,6 @@ document.onkeydown = function(e) {
     draw();
 }
 
-canvas.addEventListener('click', canvasTouchListener, false);
 
 // Handle mouse touch events here
 var canvasLeft = canvas.offsetLeft + canvas.clientLeft,
